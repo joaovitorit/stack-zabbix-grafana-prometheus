@@ -13,6 +13,8 @@ echo "############## APLICANDO ATALHO NO EXECUTáVEL #############"
 ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 echo "############## VERSÃO DO DOCKER-COMPOSE #############"
 docker-compose version
+echo "############## INSTALANDO A STACK DO ZABBIX #############"
+docker-compose up -d
 
 
 

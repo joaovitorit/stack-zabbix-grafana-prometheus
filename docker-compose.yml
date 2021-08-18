@@ -1,0 +1,127 @@
+version: '3'
+services:
+  mysql:
+    container_name: mysql
+    image: mysql:5.7
+    networks:
+      - vpcstack
+    ports:
+      - '3306:3306'
+    volumes:
+      - BD_mysql:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=suasenha
+      - MYSQL_DATABASE=zabbix
+      - MYSQL_USER=zabbix
+      - MYSQL_PASSWORD=suasenha
+  
+  zabbix-server:
+    container_name: zabbix-server
+    image: zabbix/zabbix-server-mysql:ubuntu-5.0.1
+    networks:
+      - vpcstack
+    restart: always
+    ports:
+      - '10051:10051'
+    volumes:
+      - './zabbix/alertscripts:/usr/lib/zabbix/alertscripts'
+    environment:
+      - DB_SERVER_HOST=mysql
+      - MYSQL_DATABASE=zabbix
+      - MYSQL_USER=zabbix
+      - MYSQL_PASSWORD=suasenha
+    depends_on:
+      - mysql
+
+  zabbix-frontend:
+    container_name: zabbix-frontend
+    image: zabbix/zabbix-web-apache-mysql:ubuntu-5.0.1
+    networks:
+      - vpcstack
+    restart: always
+    ports:
+      - '8010:8080'
+      - '443:8443'
+    environment:
+      - DB_SERVER_HOST=mysql
+      - MYSQL_DATABASE=zabbix
+      - MYSQL_USER=zabbix
+      - MYSQL_PASSWORD=seusenha
+      - PHP_TZ=America/Sao_Paulo
+    depends_on:
+      - mysql
+
+  zabbix-agent:
+    image: zabbix/zabbix-agent:ubuntu-5.0-latest
+    container_name: zabbix_agent
+    networks: 
+      - vpcstack
+    ports:
+      - "10050:10050"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./zbx_env/etc/zabbix/zabbix_agentd.d:/etc/zabbix/zabbix_agentd.d:rw
+      - ./zbx_env/var/lib/zabbix/modules:/var/lib/zabbix/modules:rw
+      - ./zbx_env/var/lib/zabbix/enc:/var/lib/zabbix/enc:rw
+      - ./zbx_env/var/lib/zabbix/ssh_keys:/var/lib/zabbix/ssh_keys:rw
+    labels:
+      com.zabbix.description: "Zabbix agent"
+      com.zabbix.company: "Zabbix LLC"
+      com.zabbix.component: "zabbix-agentd"
+      com.zabbix.os: "ubuntu"    
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    user: 'root'
+    environment:
+      - GF_INSTALL_PLUGINS=alexanderzobnin-zabbix-app,raintank-worldping-app
+    volumes:
+      - grafana-config:/etc/grafana:rw
+      - grafana-data:/var/lib/grafana:rw
+      - grafana-home:/usr/share/grafana:rw
+    ports:
+      - '8020:3000'
+    depends_on:
+      - cadvisor
+      - zabbix-server
+    networks:
+      - vpcstack
+      
+  cadvisor:
+    image: gcr.io/google-containers/cadvisor:latest
+    container_name: cadvisor
+    ports:
+    - 8080:8080
+    volumes:
+    - /:/rootfs:ro
+    - /var/run:/var/run:rw
+    - /sys:/sys:ro
+    - /var/lib/docker/:/var/lib/docker:ro
+    depends_on:
+    - redis
+    networks:
+    - vpcstack
+  
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+    - 6379:6379
+    networks:
+    - vpcstack
+
+volumes:
+ grafana-config:
+ grafana-data:
+ grafana-home: 
+ BD_mysql:
+    
+
+networks:
+  vpcstack:
+   
+
+          
+          
+ 

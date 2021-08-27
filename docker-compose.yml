@@ -46,7 +46,7 @@ services:
       - DB_SERVER_HOST=mysql
       - MYSQL_DATABASE=zabbix
       - MYSQL_USER=zabbix
-      - MYSQL_PASSWORD=seusenha
+      - MYSQL_PASSWORD=suasenha
       - PHP_TZ=America/Sao_Paulo
     depends_on:
       - mysql
